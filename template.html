@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central 360</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#04101f;
+    --panel:#0c2036;
+    --panel-2:#071726;
+    --line:#1d3f5c;
+    --text:#eef4fb;
+    --muted:#8fa8c4;
+    --accent:#12a8e8;
+    --accent-strong:#5fd4ff;
+    --accent-dim:#123a55;
+    --track:#173049;
+    --gold:#ed9b29;
+    --bg-photo-opacity:0.70;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="light"]){
+      --bg:#eef2f8;
+      --panel:#ffffff;
+      --panel-2:#f4f7fb;
+      --line:#d7e0ec;
+      --text:#101828;
+      --muted:#5c6b85;
+      --accent:#0ea5e0;
+      --accent-strong:#086e94;
+      --accent-dim:#dceafb;
+      --track:#dde6f3;
+      --gold:#c97a12;
+      --bg-photo-opacity:0.70;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eef2f8;
+    --panel:#ffffff;
+    --panel-2:#f4f7fb;
+    --line:#d7e0ec;
+    --text:#101828;
+    --muted:#5c6b85;
+    --accent:#0ea5e0;
+    --accent-strong:#086e94;
+    --accent-dim:#dceafb;
+    --track:#dde6f3;
+    --gold:#c97a12;
+    --bg-photo-opacity:0.70;
+  }
+  :root[data-theme="dark"]{
+    --bg-photo-opacity:0.70;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    padding:32px 20px 48px;
+    display:flex;
+    justify-content:center;
+    position:relative;
+  }
+  #bgPhoto{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center 30%;
+    opacity:var(--bg-photo-opacity);
+    z-index:0;
+    pointer-events:none;
+  }
+  #bgFade{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background-image:linear-gradient(180deg, var(--bg) 0%, rgba(10,15,28,0.35) 40%, var(--bg) 100%);
+    pointer-events:none;
+  }
+  .page{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:920px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    flex-wrap:wrap;
+  }
+  .brand-logo-wrap{
+    background:#ffffff;
+    border-radius:14px;
+    padding:12px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    flex-shrink:0;
+    align-self:stretch;
+  }
+  .brand-logo-wrap img{display:block;height:clamp(56px, 9vw, 96px);width:auto;}
+  .brand-row .sub{flex:1;min-width:220px;margin:0;}
+  header{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:color-mix(in srgb, var(--panel) 88%, transparent);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(26px,4vw,36px);
+    margin:0;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--muted);font-size:14.5px;max-width:65ch;}
+
+  .readout{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .readout div{background:var(--panel);padding:12px 16px;display:flex;flex-direction:column;gap:4px;}
+  .readout .k{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+  .readout .v{font-family:'IBM Plex Mono',monospace;font-size:14px;font-variant-numeric:tabular-nums;}
+
+  .mapcard{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .frame-wrap{
+    position:relative;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:#ffffff;
+    aspect-ratio:598/700;
+  }
+  .frame-wrap img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    opacity:0;
+    transition:opacity 120ms linear;
+  }
+  .frame-wrap img.active{opacity:1;}
+  .frame-badge{
+    position:absolute;
+    top:10px;
+    left:10px;
+    background:rgba(10,15,28,0.72);
+    color:#eef2f8;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    padding:5px 10px;
+    border-radius:6px;
+    letter-spacing:0.02em;
+    z-index:2;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .controls{display:flex;flex-direction:column;gap:10px;}
+  .transport{display:flex;align-items:center;gap:10px;}
+  .transport button{
+    display:flex;align-items:center;justify-content:center;
+    width:38px;height:38px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    color:var(--text);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .transport button:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .transport button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .transport button.play-btn{
+    width:56px;
+    background:var(--accent-dim);
+    border-color:var(--accent);
+    color:var(--accent-strong);
+  }
+  .transport button svg{width:16px;height:16px;fill:currentColor;}
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    flex:1;
+    height:6px;
+    border-radius:999px;
+    background:var(--track);
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--panel);
+    box-shadow:0 0 0 1px var(--accent);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--panel);
+    box-shadow:0 0 0 1px var(--accent);
+    cursor:pointer;
+  }
+
+  .slider-track{
+    position:relative;
+    flex:1;
+    margin-bottom:26px;
+  }
+  .slider-track input[type="range"]{width:100%;}
+  .scrub-label{
+    position:absolute;
+    top:100%;
+    margin-top:6px;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1px;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .scrub-label .tick-h{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    color:var(--accent-strong);
+    font-variant-numeric:tabular-nums;
+  }
+  .scrub-label .tick-d{
+    font-family:'Inter',sans-serif;
+    font-size:10px;
+    color:var(--muted);
+  }
+  .range-ends{
+    display:flex;
+    justify-content:space-between;
+    padding:0 2px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    color:var(--muted);
+    opacity:0.7;
+  }
+  .speed{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-left:auto;
+  }
+  .speed select{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    background:var(--panel-2);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:4px 6px;
+  }
+
+  .legend-note{
+    display:flex;gap:10px;align-items:flex-start;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .legend-note .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0;}
+
+  footer{
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    font-size:12.5px;color:var(--muted);
+    padding-top:6px;border-top:1px solid var(--line);
+  }
+  footer a{color:var(--accent);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  @media (prefers-reduced-motion: reduce){
+    .frame-wrap img{transition:none;}
+  }
+
+  .tabbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    padding:4px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    width:fit-content;
+    max-width:100%;
+  }
+  .tabbar button{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:var(--muted);
+    background:transparent;
+    border:none;
+    border-radius:7px;
+    padding:7px 13px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tabbar button:hover{color:var(--text);}
+  .tabbar button.active{
+    background:var(--panel);
+    color:var(--accent-strong);
+    box-shadow:0 1px 2px rgba(0,0,0,0.15);
+  }
+  .tabbar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .tabpanel{display:flex;flex-direction:column;gap:16px;}
+  .tabpanel[hidden]{display:none;}
+
+  .toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .update-indicator{
+    font-size:12.5px;
+    line-height:1.7;
+    color:var(--muted);
+    max-width:46ch;
+    background:color-mix(in srgb, var(--panel-2) 90%, transparent);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:8px 12px;
+  }
+  .update-indicator strong{color:var(--text);font-weight:600;white-space:nowrap;}
+  .dot-live{
+    display:inline-block;
+    vertical-align:middle;
+    width:7px;height:7px;border-radius:50%;
+    background:#3ecf8e;
+    margin-right:7px;
+    box-shadow:0 0 0 0 rgba(62,207,142,0.6);
+    animation:pulse-live 2.2s infinite;
+  }
+  @keyframes pulse-live{
+    0%{box-shadow:0 0 0 0 rgba(62,207,142,0.5);}
+    70%{box-shadow:0 0 0 6px rgba(62,207,142,0);}
+    100%{box-shadow:0 0 0 0 rgba(62,207,142,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .dot-live{animation:none;}
+  }
+
+  .forecast-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:6px;
+    overflow-x:auto;
+  }
+  table.forecast{
+    width:100%;
+    border-collapse:collapse;
+    min-width:640px;
+  }
+  table.forecast th{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    font-weight:600;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  table.forecast th.num, table.forecast td.num{text-align:right;}
+  table.forecast td{
+    padding:13px 14px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+    white-space:nowrap;
+  }
+  table.forecast tr:last-child td{border-bottom:none;}
+  table.forecast td.date{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  table.forecast td.cond{display:flex;align-items:center;gap:8px;white-space:normal;}
+  table.forecast td.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+  table.forecast tr.today td{background:var(--accent-dim);}
+
+  .moon-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .moon-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--muted);
+    text-align:center;
+    padding:0 2px;
+  }
+  .moon-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .moon-day{
+    position:relative;
+    min-height:88px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    padding:6px 4px;
+  }
+  .moon-day.pad{visibility:hidden;}
+  .moon-day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+  .moon-day.best-day{
+    background:color-mix(in srgb, var(--gold) 14%, transparent);
+    border-color:var(--gold);
+  }
+  :root[data-theme="light"] .moon-day.best-day{background:#fbeed8;}
+  .moon-day.good-day{
+    background:var(--accent-dim);
+    border-color:var(--accent);
+  }
+  .moon-day .num{
+    position:absolute;
+    top:6px;
+    left:9px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .moon-day .icon{font-size:34px;line-height:1;margin-top:10px;}
+  .moon-day .badge{
+    font-size:8.5px;
+    font-weight:700;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    padding:2px 5px;
+    border-radius:5px;
+    white-space:nowrap;
+  }
+  .moon-day .badge.best{
+    background:color-mix(in srgb, var(--gold) 16%, transparent);
+    color:var(--gold);
+    border:1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+  .moon-day .badge.good{background:var(--accent-dim);color:var(--accent-strong);border:1px solid var(--accent);}
+
+  .moon-legend{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .moon-legend div{display:flex;align-items:center;gap:8px;}
+  .moon-legend .icon{font-size:16px;}
+
+  .club-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .club-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .club-crest{
+    width:44px;height:44px;
+    border-radius:50%;
+    background:#000;
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    flex-shrink:0;
+    border:2px solid #fff;
+    box-shadow:0 0 0 1px #000;
+  }
+  .club-head h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    margin:0;
+  }
+  .club-head .pos{
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .club-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .club-grid div{background:var(--panel);padding:12px 16px;display:flex;flex-direction:column;gap:4px;}
+  .club-grid .k{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+  .club-grid .v{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;}
+
+  .next-matches{display:flex;flex-direction:column;gap:8px;}
+  .next-matches-title{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+  .next-match{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    flex-wrap:wrap;
+  }
+  .next-match .teams{font-weight:700;font-size:15px;}
+  .next-match .meta{font-size:12.5px;color:var(--muted);}
+  .next-match .comp{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    padding:2px 7px;
+    border-radius:5px;
+    margin-right:8px;
+    background:var(--accent-dim);
+    color:var(--accent-strong);
+    border:1px solid var(--accent);
+  }
+  .next-match .comp.lib{
+    background:color-mix(in srgb, var(--gold) 16%, transparent);
+    color:var(--gold);
+    border:1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+
+  .form-row{display:flex;gap:6px;align-items:center;}
+  .form-pill{
+    width:26px;height:26px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;
+    color:#fff;
+  }
+  .form-pill.v{background:#2fb872;}
+  .form-pill.e{background:#c9a227;}
+  .form-pill.d{background:#d9534f;}
+
+  .results-list{display:flex;flex-direction:column;gap:8px;}
+  .result-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:13.5px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .result-row .rnd{color:var(--muted);font-size:11px;min-width:52px;}
+  .result-row .score{font-family:'IBM Plex Mono',monospace;font-weight:700;font-variant-numeric:tabular-nums;}
+
+  table.standings{
+    width:100%;
+    border-collapse:collapse;
+    min-width:680px;
+    font-size:13px;
+  }
+  table.standings th{
+    text-align:center;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    font-weight:600;
+    padding:9px 6px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  table.standings th.team{text-align:left;}
+  table.standings td{
+    padding:8px 6px;
+    border-bottom:1px solid var(--line);
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-variant-numeric:tabular-nums;
+  }
+  table.standings td.pos{font-weight:700;color:var(--text);}
+  table.standings td.team{
+    text-align:left;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  table.standings tr.highlight td{background:var(--accent-dim);}
+  table.standings tr.zone-lib td.pos{box-shadow:inset 3px 0 0 #2fb872;}
+  table.standings tr.zone-releg td.pos{box-shadow:inset 3px 0 0 #d9534f;}
+  .standings-legend{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    font-size:11.5px;
+    color:var(--muted);
+    padding:2px 4px;
+  }
+  .standings-legend span{display:flex;align-items:center;gap:6px;}
+  .standings-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .news-list{display:flex;flex-direction:column;gap:2px;}
+  .news-item{
+    padding:14px 4px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .news-item:last-child{border-bottom:none;}
+  .news-item h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    margin:0;
+    font-weight:600;
+    text-wrap:balance;
+  }
+  .news-item p{margin:0;font-size:13px;color:var(--muted);}
+  .news-item .meta{font-size:11px;color:var(--accent-strong);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.03em;}
+</style>
+</head>
+<body>
+<img id="bgPhoto" src="__BGIMG__" alt="" aria-hidden="true">
+<div id="bgFade" aria-hidden="true"></div>
+<div class="page">
+  <header>
+    <div class="brand-row">
+      <span class="brand-logo-wrap"><img src="__LOGO__" alt="Central 360 — Tudo o que importa, em um só lugar"></span>
+      <p class="sub">Clima, pesca, futebol e notícias — em um só painel. Dados de precipitação do INMET, previsão do ClimaTempo, calendário lunar de pesca, tabela do Brasileirão, situação do Corinthians e manchetes do mundo.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="tabbar" role="tablist">
+      <button id="tabBtnAnim" class="active" role="tab" aria-selected="true" aria-controls="tabAnim">Animação</button>
+      <button id="tabBtnForecast" role="tab" aria-selected="false" aria-controls="tabForecast">Previsão 7 dias</button>
+      <button id="tabBtnMoon" role="tab" aria-selected="false" aria-controls="tabMoon">Calendário Lunar</button>
+      <button id="tabBtnCorinthians" role="tab" aria-selected="false" aria-controls="tabCorinthians">Corinthians</button>
+      <button id="tabBtnTabela" role="tab" aria-selected="false" aria-controls="tabTabela">Tabela dos Campeonatos</button>
+      <button id="tabBtnNoticias" role="tab" aria-selected="false" aria-controls="tabNoticias">Notícias do Mundo</button>
+    </div>
+    <span class="update-indicator">
+      <span class="dot-live"></span>
+      Atualiza automaticamente a cada 6h (GitHub Actions) · última atualização: <strong id="lastUpdated">__LAST_UPDATED__</strong>
+    </span>
+  </div>
+
+  <div class="tabpanel" id="tabAnim" role="tabpanel">
+    <div class="readout">
+      <div><span class="k">Inicialização</span><span class="v">__INIT_DATE__</span></div>
+      <div><span class="k">Validade (atual)</span><span class="v" id="validOut">__VALID_DATE__</span></div>
+      <div><span class="k">Alcance</span><span class="v" id="hourOut">+024h</span></div>
+      <div><span class="k">Modelo</span><span class="v">COSMO 7×7 km</span></div>
+    </div>
+
+    <div class="mapcard">
+      <div class="frame-wrap" id="frameWrap">
+        <span class="frame-badge" id="frameBadge">+024h</span>
+      </div>
+
+      <div class="controls">
+        <div class="transport">
+          <button id="btnStart" title="Início" aria-label="Ir ao início">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 9-6v12z" transform="scale(-1,1) translate(-24,0)"/></svg>
+          </button>
+          <button id="btnPrev" title="Quadro anterior" aria-label="Quadro anterior">
+            <svg viewBox="0 0 24 24"><path d="M15.5 6 7 12l8.5 6z"/></svg>
+          </button>
+          <button id="btnPlay" class="play-btn" title="Reproduzir" aria-label="Reproduzir">
+            <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M7 5h4v14H7zm6 0h4v14h-4z"/></svg>
+          </button>
+          <button id="btnNext" title="Próximo quadro" aria-label="Próximo quadro">
+            <svg viewBox="0 0 24 24"><path d="M8.5 6 17 12l-8.5 6z"/></svg>
+          </button>
+          <button id="btnEnd" title="Fim" aria-label="Ir ao fim">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 9-6v12z"/></svg>
+          </button>
+          <div class="slider-track">
+            <input type="range" id="scrubber" min="0" max="16" step="1" value="0" aria-label="Selecionar quadro">
+            <span class="scrub-label" id="scrubLabel">
+              <span class="tick-h" id="scrubLabelH">+024h</span>
+              <span class="tick-d" id="scrubLabelD"></span>
+            </span>
+          </div>
+          <div class="speed">
+            <label for="speedSel">Velocidade</label>
+            <select id="speedSel">
+              <option value="700">Lenta</option>
+              <option value="400" selected>Normal</option>
+              <option value="200">Rápida</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span>Escala de cores em mm/dia acumulados em 24h, do azul claro (chuva fraca) ao vermelho/rosa (volumes extremos, acima de 100 mm). Arraste o controle deslizante ou aperte "Reproduzir" para acompanhar o deslocamento das áreas de chuva pelo Norte, Centro-Oeste e Sul ao longo dos 5 dias de previsão.</span>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tabForecast" role="tabpanel" hidden>
+    <div class="forecast-card">
+      <table class="forecast">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Dia</th>
+            <th>Condição prevista</th>
+            <th class="num">Mín.</th>
+            <th class="num">Máx.</th>
+            <th class="num">🌧️ Chuva prevista</th>
+          </tr>
+        </thead>
+        <tbody>
+__FORECAST_ROWS__
+        </tbody>
+      </table>
+    </div>
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span>Previsão de referência para os próximos 7 dias em Piracicaba-SP, obtida no ClimaTempo, como base de comparação com a evolução da precipitação acumulada mostrada na aba "Animação".</span>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tabMoon" role="tabpanel" hidden>
+    <div class="moon-card">
+      <div class="moon-weekdays">
+        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      </div>
+      <div class="moon-grid">
+__MOON_GRID__
+      </div>
+
+      <div class="moon-legend">
+__MOON_LEGEND__
+      </div>
+    </div>
+
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span><strong>Como ler:</strong> nas fases de <strong>lua nova</strong> e <strong>lua cheia</strong> a maré costuma ficar mais forte, movimentando mais alimento — boas para predadores e pesca noturna, mas com corrente mais exigente no litoral (marcadas com ★ Melhor). Nos <strong>quartos crescente e minguante</strong> a maré tende a ficar mais moderada, favorecendo pesca técnica com iscas leves (marcadas como Técnica). Use isso como ponto de partida e sempre cruze com maré, vento e condição da água no seu local. Fases calculadas astronomicamente (ciclo sinódico lunar).</span>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tabCorinthians" role="tabpanel" hidden>
+    <div class="club-card">
+      <div class="club-head">
+        <div class="club-crest">SCCP</div>
+        <div>
+          <h2>Sport Club Corinthians Paulista</h2>
+          <div class="pos">Brasileirão Série A __SEASON_YEAR__ — __CORINTHIANS_POS_TEXT__</div>
+        </div>
+      </div>
+
+      <div class="club-grid">
+__CORINTHIANS_STATS__
+      </div>
+
+      <div class="next-matches">
+        <div class="next-matches-title">Próximos jogos</div>
+__CORINTHIANS_MATCHES__
+      </div>
+
+      <div class="legend-note">
+        <span class="dot"></span>
+        <span>__CORINTHIANS_NOTE__</span>
+      </div>
+    </div>
+
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span>Dados do Campeonato Brasileiro Série A __SEASON_YEAR__, extraídos do <a href="https://ge.globo.com/futebol/brasileirao-serie-a/" target="_blank" rel="noopener">ge.globo.com</a>.</span>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tabTabela" role="tabpanel" hidden>
+    <div class="forecast-card">
+      <table class="standings">
+        <thead>
+          <tr>
+            <th class="team">Time</th>
+            <th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+__STANDINGS_ROWS__
+        </tbody>
+      </table>
+    </div>
+    <div class="standings-legend">
+      <span><i style="background:#2fb872"></i> G6 — Libertadores</span>
+      <span><i style="background:var(--accent)"></i> Corinthians</span>
+      <span><i style="background:#d9534f"></i> Z4 — Rebaixamento</span>
+    </div>
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span>__STANDINGS_NOTE__ Fonte: <a href="https://ge.globo.com/futebol/brasileirao-serie-a/" target="_blank" rel="noopener">ge.globo.com</a>.</span>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="tabNoticias" role="tabpanel" hidden>
+    <div class="forecast-card">
+      <div class="news-list">
+__NEWS_ITEMS__
+      </div>
+    </div>
+    <div class="legend-note">
+      <span class="dot"></span>
+      <span>Manchetes internacionais reais, extraídas do <a href="https://g1.globo.com/mundo/" target="_blank" rel="noopener">g1.globo.com/mundo</a> no momento da atualização.</span>
+    </div>
+  </div>
+
+  <footer>
+    <span>Fontes: INMET (VIME) · ClimaTempo · ge.globo.com · g1.globo.com</span>
+    <a href="https://vime.inmet.gov.br/BRA" target="_blank" rel="noopener">vime.inmet.gov.br/BRA ↗</a>
+  </footer>
+</div>
+
+<script>
+  const FRAMES = [
+__FRAMES_JS__
+  ];
+
+  const frameWrap = document.getElementById('frameWrap');
+  const badge = document.getElementById('frameBadge');
+  const scrubber = document.getElementById('scrubber');
+  const hourOut = document.getElementById('hourOut');
+  const validOut = document.getElementById('validOut');
+  const btnPlay = document.getElementById('btnPlay');
+  const iconPlay = document.getElementById('iconPlay');
+  const iconPause = document.getElementById('iconPause');
+  const speedSel = document.getElementById('speedSel');
+  const scrubLabel = document.getElementById('scrubLabel');
+  const scrubLabelH = document.getElementById('scrubLabelH');
+  const scrubLabelD = document.getElementById('scrubLabelD');
+
+  const WEEKDAYS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  function parseValid(str){
+    const [datePart, hourPart] = str.split(' ');
+    const [dd, mm, yyyy] = datePart.split('/').map(Number);
+    const hh = parseInt(hourPart, 10);
+    return new Date(Date.UTC(yyyy, mm - 1, dd, hh));
+  }
+  function updateScrubLabel(i){
+    const f = FRAMES[i];
+    const d = parseValid(f.valid);
+    const pad = n => String(n).padStart(2, '0');
+    scrubLabelH.textContent = '+' + f.h + 'h';
+    scrubLabelD.textContent = pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + ' ' + WEEKDAYS_PT[d.getUTCDay()];
+    const percent = FRAMES.length > 1 ? i / (FRAMES.length - 1) : 0;
+    scrubLabel.style.left = 'calc(' + percent + ' * (100% - 16px) + 8px)';
+  }
+
+  scrubber.max = FRAMES.length - 1;
+
+  const imgEls = FRAMES.map((f, i) => {
+    const img = document.createElement('img');
+    img.src = f.src;
+    img.alt = 'Precipitação acumulada em 24h — validade ' + f.valid;
+    img.loading = i === 0 ? 'eager' : 'lazy';
+    if (i === 0) img.classList.add('active');
+    frameWrap.appendChild(img);
+    return img;
+  });
+
+  let current = 0;
+  let playing = false;
+  let timer = null;
+
+  function render(i){
+    current = i;
+    imgEls.forEach((img, idx) => img.classList.toggle('active', idx === i));
+    const f = FRAMES[i];
+    badge.textContent = '+' + f.h + 'h';
+    hourOut.textContent = '+' + f.h + 'h';
+    validOut.textContent = f.valid;
+    scrubber.value = i;
+    updateScrubLabel(i);
+  }
+
+  function step(){
+    let next = current + 1;
+    if (next >= FRAMES.length) next = 0;
+    render(next);
+  }
+
+  function play(){
+    playing = true;
+    iconPlay.style.display = 'none';
+    iconPause.style.display = '';
+    btnPlay.setAttribute('aria-label','Pausar');
+    timer = setInterval(step, parseInt(speedSel.value, 10));
+  }
+  function pause(){
+    playing = false;
+    iconPlay.style.display = '';
+    iconPause.style.display = 'none';
+    btnPlay.setAttribute('aria-label','Reproduzir');
+    clearInterval(timer);
+  }
+
+  const tabs = {
+    anim: {btn: document.getElementById('tabBtnAnim'), panel: document.getElementById('tabAnim')},
+    forecast: {btn: document.getElementById('tabBtnForecast'), panel: document.getElementById('tabForecast')},
+    moon: {btn: document.getElementById('tabBtnMoon'), panel: document.getElementById('tabMoon')},
+    corinthians: {btn: document.getElementById('tabBtnCorinthians'), panel: document.getElementById('tabCorinthians')},
+    tabela: {btn: document.getElementById('tabBtnTabela'), panel: document.getElementById('tabTabela')},
+    noticias: {btn: document.getElementById('tabBtnNoticias'), panel: document.getElementById('tabNoticias')}
+  };
+  function showTab(name){
+    for (const key in tabs) {
+      const isActive = key === name;
+      tabs[key].panel.hidden = !isActive;
+      tabs[key].btn.classList.toggle('active', isActive);
+      tabs[key].btn.setAttribute('aria-selected', String(isActive));
+    }
+    if (name !== 'anim') pause();
+  }
+  tabs.anim.btn.addEventListener('click', () => showTab('anim'));
+  tabs.forecast.btn.addEventListener('click', () => showTab('forecast'));
+  tabs.moon.btn.addEventListener('click', () => showTab('moon'));
+  tabs.corinthians.btn.addEventListener('click', () => showTab('corinthians'));
+  tabs.tabela.btn.addEventListener('click', () => showTab('tabela'));
+  tabs.noticias.btn.addEventListener('click', () => showTab('noticias'));
+
+  btnPlay.addEventListener('click', () => playing ? pause() : play());
+  document.getElementById('btnPrev').addEventListener('click', () => { pause(); render(Math.max(0, current - 1)); });
+  document.getElementById('btnNext').addEventListener('click', () => { pause(); render(Math.min(FRAMES.length - 1, current + 1)); });
+  document.getElementById('btnStart').addEventListener('click', () => { pause(); render(0); });
+  document.getElementById('btnEnd').addEventListener('click', () => { pause(); render(FRAMES.length - 1); });
+  scrubber.addEventListener('input', (e) => { pause(); render(parseInt(e.target.value, 10)); });
+  speedSel.addEventListener('change', () => { if (playing){ pause(); play(); } });
+
+  render(0);
+</script>
+</body>
+</html>
