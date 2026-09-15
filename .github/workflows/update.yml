@@ -15,24 +15,23 @@ concurrency:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    # Roda no PC do Mauricio (self-hosted): o INMET bloqueia IPs de datacenter
+    # (confirmado tanto no sandbox da Anthropic quanto nos runners do GitHub),
+    # mas funciona normalmente a partir de uma rede residencial/corporativa comum.
+    runs-on: self-hosted
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
-          cache-dependency-path: scraper/requirements.txt
 
       - name: Install Python dependencies
         run: pip install -r scraper/requirements.txt
 
       - name: Install Playwright Chromium
-        run: python -m playwright install --with-deps chromium
+        run: python -m playwright install chromium
 
       - name: Run scraper
         run: python scraper/scrape.py
