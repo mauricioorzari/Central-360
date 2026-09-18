@@ -254,6 +254,20 @@ def b64_data_uri(path, mime):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sections", choices=["all", "cloud", "inmet"], default="all",
+        help=(
+            "'cloud' skips INMET (for the ubuntu-latest runner, which INMET's "
+            "bot-defense blocks by datacenter IP); 'inmet' skips everything "
+            "else (for the self-hosted runner); 'all' runs everything (local)."
+        ),
+    )
+    args = parser.parse_args()
+    do_cloud = args.sections in ("all", "cloud")
+    do_inmet = args.sections in ("all", "inmet")
+
     prev_html = read_prev_output()
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template = f.read()
@@ -268,49 +282,68 @@ def main():
     replacements["__LOGO__"] = b64_data_uri(os.path.join(ASSETS_DIR, "logo.png"), "image/png")
     replacements["__SEASON_YEAR__"] = str(now_local.year)
 
-    section, ok = run_section("FORECAST_ROWS", prev_html, build_forecast_rows)
+    if do_cloud:
+        section, ok = run_section("FORECAST_ROWS", prev_html, build_forecast_rows)
+    else:
+        section = wrap("FORECAST_ROWS", get_fallback(prev_html, "FORECAST_ROWS") or "")
     replacements["__FORECAST_ROWS__"] = section
 
-    moon_grid, moon_legend = None, None
-    try:
-        moon_grid, moon_legend = build_moon_section(now_local)
-        log("OK   MOON")
-        replacements["__MOON_GRID__"] = wrap("MOON_GRID", moon_grid)
-        replacements["__MOON_LEGEND__"] = wrap("MOON_LEGEND", moon_legend)
-    except Exception as e:
-        log(f"FAIL MOON: {e}")
-        traceback.print_exc()
+    if do_cloud:
+        try:
+            moon_grid, moon_legend = build_moon_section(now_local)
+            log("OK   MOON")
+            replacements["__MOON_GRID__"] = wrap("MOON_GRID", moon_grid)
+            replacements["__MOON_LEGEND__"] = wrap("MOON_LEGEND", moon_legend)
+        except Exception as e:
+            log(f"FAIL MOON: {e}")
+            traceback.print_exc()
+            replacements["__MOON_GRID__"] = wrap("MOON_GRID", get_fallback(prev_html, "MOON_GRID") or "")
+            replacements["__MOON_LEGEND__"] = wrap("MOON_LEGEND", get_fallback(prev_html, "MOON_LEGEND") or "")
+    else:
         replacements["__MOON_GRID__"] = wrap("MOON_GRID", get_fallback(prev_html, "MOON_GRID") or "")
         replacements["__MOON_LEGEND__"] = wrap("MOON_LEGEND", get_fallback(prev_html, "MOON_LEGEND") or "")
 
-    try:
-        pos_text, stats, matches, note, standings_rows, standings_note = build_corinthians_and_standings()
-        log("OK   CORINTHIANS+STANDINGS")
-        replacements["__CORINTHIANS_POS_TEXT__"] = wrap("CORINTHIANS_POS_TEXT", pos_text)
-        replacements["__CORINTHIANS_STATS__"] = wrap("CORINTHIANS_STATS", stats)
-        replacements["__CORINTHIANS_MATCHES__"] = wrap("CORINTHIANS_MATCHES", matches)
-        replacements["__CORINTHIANS_NOTE__"] = wrap("CORINTHIANS_NOTE", note)
-        replacements["__STANDINGS_ROWS__"] = wrap("STANDINGS_ROWS", standings_rows)
-        replacements["__STANDINGS_NOTE__"] = wrap("STANDINGS_NOTE", standings_note)
-    except Exception as e:
-        log(f"FAIL CORINTHIANS+STANDINGS: {e}")
-        traceback.print_exc()
+    if do_cloud:
+        try:
+            pos_text, stats, matches, note, standings_rows, standings_note = build_corinthians_and_standings()
+            log("OK   CORINTHIANS+STANDINGS")
+            replacements["__CORINTHIANS_POS_TEXT__"] = wrap("CORINTHIANS_POS_TEXT", pos_text)
+            replacements["__CORINTHIANS_STATS__"] = wrap("CORINTHIANS_STATS", stats)
+            replacements["__CORINTHIANS_MATCHES__"] = wrap("CORINTHIANS_MATCHES", matches)
+            replacements["__CORINTHIANS_NOTE__"] = wrap("CORINTHIANS_NOTE", note)
+            replacements["__STANDINGS_ROWS__"] = wrap("STANDINGS_ROWS", standings_rows)
+            replacements["__STANDINGS_NOTE__"] = wrap("STANDINGS_NOTE", standings_note)
+        except Exception as e:
+            log(f"FAIL CORINTHIANS+STANDINGS: {e}")
+            traceback.print_exc()
+            for name in ("CORINTHIANS_POS_TEXT", "CORINTHIANS_STATS", "CORINTHIANS_MATCHES",
+                         "CORINTHIANS_NOTE", "STANDINGS_ROWS", "STANDINGS_NOTE"):
+                replacements[f"__{name}__"] = wrap(name, get_fallback(prev_html, name) or "")
+    else:
         for name in ("CORINTHIANS_POS_TEXT", "CORINTHIANS_STATS", "CORINTHIANS_MATCHES",
                      "CORINTHIANS_NOTE", "STANDINGS_ROWS", "STANDINGS_NOTE"):
             replacements[f"__{name}__"] = wrap(name, get_fallback(prev_html, name) or "")
 
-    section, ok = run_section("NEWS_ITEMS", prev_html, build_news_items)
+    if do_cloud:
+        section, ok = run_section("NEWS_ITEMS", prev_html, build_news_items)
+    else:
+        section = wrap("NEWS_ITEMS", get_fallback(prev_html, "NEWS_ITEMS") or "")
     replacements["__NEWS_ITEMS__"] = section
 
-    try:
-        init_label, valid_first, frames_js = build_inmet()
-        log("OK   INMET")
-        replacements["__INIT_DATE__"] = wrap("INIT_DATE", init_label)
-        replacements["__VALID_DATE__"] = wrap("VALID_DATE", valid_first)
-        replacements["__FRAMES_JS__"] = wrap("FRAMES_JS", frames_js)
-    except Exception as e:
-        log(f"FAIL INMET: {e}")
-        traceback.print_exc()
+    if do_inmet:
+        try:
+            init_label, valid_first, frames_js = build_inmet()
+            log("OK   INMET")
+            replacements["__INIT_DATE__"] = wrap("INIT_DATE", init_label)
+            replacements["__VALID_DATE__"] = wrap("VALID_DATE", valid_first)
+            replacements["__FRAMES_JS__"] = wrap("FRAMES_JS", frames_js)
+        except Exception as e:
+            log(f"FAIL INMET: {e}")
+            traceback.print_exc()
+            replacements["__INIT_DATE__"] = wrap("INIT_DATE", get_fallback(prev_html, "INIT_DATE") or "")
+            replacements["__VALID_DATE__"] = wrap("VALID_DATE", get_fallback(prev_html, "VALID_DATE") or "")
+            replacements["__FRAMES_JS__"] = wrap("FRAMES_JS", get_fallback(prev_html, "FRAMES_JS") or "")
+    else:
         replacements["__INIT_DATE__"] = wrap("INIT_DATE", get_fallback(prev_html, "INIT_DATE") or "")
         replacements["__VALID_DATE__"] = wrap("VALID_DATE", get_fallback(prev_html, "VALID_DATE") or "")
         replacements["__FRAMES_JS__"] = wrap("FRAMES_JS", get_fallback(prev_html, "FRAMES_JS") or "")

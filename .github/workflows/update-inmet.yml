@@ -1,9 +1,9 @@
-name: Atualizar Central 360
+name: Atualizar Central 360 (INMET)
 
 on:
   schedule:
-    # A cada 6h (UTC): 00h, 06h, 12h, 18h
-    - cron: "0 0,6,12,18 * * *"
+    # A cada 6h (UTC), 5min depois do job da nuvem para reduzir conflito de push
+    - cron: "5 0,6,12,18 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -15,9 +15,12 @@ concurrency:
 
 jobs:
   update:
-    # Roda no PC do Mauricio (self-hosted): o INMET bloqueia IPs de datacenter
-    # (confirmado tanto no sandbox da Anthropic quanto nos runners do GitHub),
-    # mas funciona normalmente a partir de uma rede residencial/corporativa comum.
+    # Só o INMET. Precisa rodar neste PC (self-hosted): a proteção anti-bot
+    # do site bloqueia por faixa de IP de datacenter (confirmado tanto no
+    # sandbox da Anthropic quanto nos runners do GitHub Actions), mas
+    # funciona normalmente a partir de uma rede residencial/corporativa comum.
+    # Se este runner estiver offline, esse job só fica na fila e o GitHub
+    # cancela sozinho depois de um tempo — não afeta o job da nuvem.
     runs-on: self-hosted
     timeout-minutes: 15
     defaults:
@@ -33,17 +36,18 @@ jobs:
       - name: Install Playwright Chromium
         run: python -m playwright install chromium
 
-      - name: Run scraper
-        run: python scraper/scrape.py
+      - name: Run scraper (INMET only)
+        run: python scraper/scrape.py --sections inmet
 
       - name: Commit and push if changed
         run: |
           git config user.name "central-360-bot"
           git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main
           if git diff --quiet -- index.html; then
             echo "Sem mudanças em index.html; nada para commitar."
             exit 0
           fi
           git add index.html
-          git commit -m "Atualização automática: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git commit -m "Atualização automática (INMET): $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
