@@ -10,7 +10,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: update-central-360
+  # Grupo próprio: um run enfileirado aqui (aguardando o runner ligar) nunca
+  # deve travar o workflow da nuvem, que precisa continuar rodando sozinho.
+  group: update-central-360-inmet
   cancel-in-progress: false
 
 jobs:

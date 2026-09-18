@@ -10,7 +10,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: update-central-360
+  # Grupo próprio: nunca deve ficar preso atrás do job do INMET (self-hosted),
+  # que pode passar dias na fila esperando o runner ligar.
+  group: update-central-360-cloud
   cancel-in-progress: false
 
 jobs:
